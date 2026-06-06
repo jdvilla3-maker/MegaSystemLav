@@ -1,238 +1,513 @@
 package com.megalab.ui;
 
-import com.megalab.model.Cliente;
 import com.megalab.service.ClienteService;
+import com.megalab.model.Cliente;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 public class ClienteFrame extends JFrame {
 
-    private ClienteService service = new ClienteService();
-    private JTable tabla;
-    private DefaultTableModel modelo;
+    // Manejo con controlador
+    private ClienteService service;
 
-    private JTextField txtNombre, txtCedula, txtTelefono;
+    private int idClienteSeleccionado = -1;
+
+    private JTextField txtNombres;
+    private JTextField txtApellidos;
+    private JTextField txtCedula;
+    private JTextField txtTelefono;
+    private JTextField txtBuscar;
 
     private JButton btnAgregar;
+    private JButton btnEditar;
+    private JButton btnEliminar;
+    private JButton btnLimpiar;
+    private JButton btnVolver;
+
+    private JTable tablaClientes;
+    private DefaultTableModel modelo;
 
     public ClienteFrame() {
-        setTitle("Gestión de Clientes");
-        setSize(600, 400);
+
+        service = new ClienteService();
+
+        setTitle("MegaLav System - Gestión de Clientes");
+        setSize(1000, 700);
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        setLayout(new BorderLayout());
+        Color fondo = new Color(245, 247, 250);
+        Color azul = new Color(33, 150, 243);
+        Color texto = new Color(44, 62, 80);
 
-        // FORMULARIO
-        JPanel form = new JPanel(new GridLayout(4,2));
+        JPanel principal = new JPanel(new BorderLayout());
+        principal.setBackground(fondo);
 
-        txtNombre = new JTextField();
+        // ==========================
+        // HEADER
+        // ==========================
+
+        JPanel header = new JPanel();
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+        header.setBackground(fondo);
+        header.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        JLabel titulo = new JLabel("GESTIÓN DE CLIENTES");
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        titulo.setForeground(texto);
+        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel subtitulo = new JLabel(
+                "Registrar, consultar y administrar clientes"
+        );
+
+        subtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        subtitulo.setForeground(Color.GRAY);
+        subtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        header.add(titulo);
+        header.add(Box.createVerticalStrut(10));
+        header.add(subtitulo);
+
+        // ==========================
+        // PANEL IZQUIERDO
+        // ==========================
+
+        JPanel panelIzquierdo = new JPanel();
+        panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
+        panelIzquierdo.setBackground(Color.WHITE);
+        panelIzquierdo.setBorder(new EmptyBorder(25,25,25,25));
+
+        JLabel lblFormulario = new JLabel("DATOS DEL CLIENTE");
+        lblFormulario.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblFormulario.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        panelIzquierdo.add(lblFormulario);
+        panelIzquierdo.add(Box.createVerticalStrut(20));
+
+        txtNombres = new JTextField();
+        txtApellidos = new JTextField();
         txtCedula = new JTextField();
         txtTelefono = new JTextField();
 
-        form.add(new JLabel("Nombre"));
-        form.add(txtNombre);
-        form.add(new JLabel("Cédula"));
-        form.add(txtCedula);
-        form.add(new JLabel("Teléfono"));
-        form.add(txtTelefono);
+        txtNombres.setMaximumSize(new Dimension(Integer.MAX_VALUE,40));
+        txtApellidos.setMaximumSize(new Dimension(Integer.MAX_VALUE,40));
+        txtCedula.setMaximumSize(new Dimension(Integer.MAX_VALUE,40));
+        txtTelefono.setMaximumSize(new Dimension(Integer.MAX_VALUE,40));
 
-        btnAgregar = new JButton("Agregar");
-        form.add(btnAgregar);
+        panelIzquierdo.add(new JLabel("Nombres"));
+        panelIzquierdo.add(Box.createVerticalStrut(5));
+        panelIzquierdo.add(txtNombres);
 
-        add(form, BorderLayout.NORTH);
+        panelIzquierdo.add(Box.createVerticalStrut(15));
 
-        // TABLA
-        modelo = new DefaultTableModel(
-                new String[]{"_id", "Nombre", "Cédula", "Teléfono"}, 0
-        );
-        tabla = new JTable(modelo) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // bloquea edición
-            }
-        };
-        tabla.getColumnModel().getColumn(0).setMinWidth(0);
-        tabla.getColumnModel().getColumn(0).setMaxWidth(0);
-        tabla.getColumnModel().getColumn(0).setWidth(0);
+        panelIzquierdo.add(new JLabel("Apellidos"));
+        panelIzquierdo.add(Box.createVerticalStrut(5));
+        panelIzquierdo.add(txtApellidos);
 
-        add(new JScrollPane(tabla), BorderLayout.CENTER);
+        panelIzquierdo.add(Box.createVerticalStrut(15));
+
+        panelIzquierdo.add(new JLabel("Cédula"));
+        panelIzquierdo.add(Box.createVerticalStrut(5));
+        panelIzquierdo.add(txtCedula);
+
+        panelIzquierdo.add(Box.createVerticalStrut(15));
+
+        panelIzquierdo.add(new JLabel("Teléfono"));
+        panelIzquierdo.add(Box.createVerticalStrut(5));
+        panelIzquierdo.add(txtTelefono);
+
+        panelIzquierdo.add(Box.createVerticalStrut(25));
 
         // BOTONES
-        JPanel panelBotones = new JPanel();
 
-        JButton btnEliminar = new JButton("Eliminar");
-        JButton btnEditar = new JButton("Editar");
+        // boton agregar
+        btnAgregar = crearBoton(
+                "Agregar",
+                new Color(46,204,113)
+        );
 
-        JButton btnLimpiar = new JButton("Limpiar");
-
-
-        panelBotones.add(btnEliminar);
-        panelBotones.add(btnEditar);
-
-        panelBotones.add(btnLimpiar);
-
-        add(panelBotones, BorderLayout.SOUTH);
-
-        cargarDatos();
-
-        // SELECCIONAR FILA → CARGAR DATOS
-        tabla.getSelectionModel().addListSelectionListener(e -> {
-            int fila = tabla.getSelectedRow();
-
-            if (fila != -1) {
-                txtNombre.setText(modelo.getValueAt(fila, 1).toString());
-                txtCedula.setText(modelo.getValueAt(fila, 2).toString());
-                txtTelefono.setText(modelo.getValueAt(fila, 3).toString());
-
-                btnAgregar.setEnabled(false); // desactiva agregar
-            }
-        });
-
-        // EVENTOS
 
         btnAgregar.addActionListener(e -> {
+
             if (!validarCampos()) return;
 
             boolean ok = service.agregarCliente(
-                    txtNombre.getText(),
-                    txtCedula.getText(),
-                    txtTelefono.getText()
+                    txtCedula.getText().trim(),
+                    txtNombres.getText().trim(),
+                    txtApellidos.getText().trim(),
+                    txtTelefono.getText().trim()
             );
 
             if (!ok) {
-                JOptionPane.showMessageDialog(null, "La cédula ya está registrada");
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "La cédula ya está registrada"
+                );
+
                 return;
             }
 
-            JOptionPane.showMessageDialog(null, "Cliente agregado correctamente");
-            limpiarCampos();
-            cargarDatos();
-        });
-
-        btnEliminar.addActionListener(e -> {
-            int fila = tabla.getSelectedRow();
-
-            if (fila == -1) {
-                JOptionPane.showMessageDialog(null, "Selecciona un cliente");
-                return;
-            }
-
-            int confirm = JOptionPane.showConfirmDialog(
-                    null,
-                    "¿Estás seguro de eliminar este cliente?",
-                    "Confirmar eliminación",
-                    JOptionPane.YES_NO_OPTION
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Cliente agregado correctamente"
             );
 
-            if (confirm == JOptionPane.YES_OPTION) {
-                String id = modelo.getValueAt(fila, 0).toString();
-                service.eliminarCliente(id);
+            limpiarCampos();
+            cargarDatos();
 
-                JOptionPane.showMessageDialog(null, "Cliente eliminado correctamente");
-
-                limpiarCampos();
-                cargarDatos();
-            }
         });
 
+        // boton editar
+        btnEditar = crearBoton(
+                "Editar",
+                new Color(52,152,219)
+        );
+
+        btnEditar.setEnabled(false);
 
         btnEditar.addActionListener(e -> {
-            int fila = tabla.getSelectedRow();
 
-            if (fila == -1) {
-                JOptionPane.showMessageDialog(null, "Selecciona un cliente");
+            if (idClienteSeleccionado == -1) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Seleccione un cliente"
+                );
+
                 return;
             }
 
             if (!validarCampos()) return;
 
             int confirm = JOptionPane.showConfirmDialog(
-                    null,
-                    "¿Estás seguro de editar este cliente?",
-                    "Confirmar edición",
+                    this,
+                    "¿Desea actualizar este cliente?",
+                    "Confirmación",
                     JOptionPane.YES_NO_OPTION
             );
 
-            if (confirm == JOptionPane.YES_OPTION) {
+            if (confirm != JOptionPane.YES_OPTION)
+                return;
 
-                // AQUÍ defines el id
-                String id = modelo.getValueAt(fila, 0).toString();
+            boolean ok = service.actualizarCliente(
+                    idClienteSeleccionado,
+                    txtCedula.getText().trim(),
+                    txtNombres.getText().trim(),
+                    txtApellidos.getText().trim(),
+                    txtTelefono.getText().trim()
+            );
 
-                boolean ok = service.actualizarCliente(
-                        id,
-                        txtNombre.getText(),
-                        txtCedula.getText(),
-                        txtTelefono.getText()
+            if (!ok) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "La cédula ya pertenece a otro cliente"
                 );
 
-                if (!ok) {
-                    JOptionPane.showMessageDialog(null, "La cédula ya pertenece a otro cliente");
-                    return;
-                }
-
-                JOptionPane.showMessageDialog(null, "Cliente actualizado correctamente");
-
-                limpiarCampos();
-                cargarDatos();
+                return;
             }
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Cliente actualizado correctamente"
+            );
+
+            limpiarCampos();
+            cargarDatos();
+
         });
 
-        btnLimpiar.addActionListener(e -> {
-            tabla.clearSelection();  // quita selección
-            limpiarCampos();         // limpia inputs
+        // boton eliminar
+        btnEliminar = crearBoton(
+                "Eliminar",
+                new Color(231,76,60)
+        );
+
+        btnEliminar.setEnabled(false);
+
+        btnEliminar.addActionListener(e -> {
+
+            if (idClienteSeleccionado == -1) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Seleccione un cliente"
+                );
+
+                return;
+            }
+
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "¿Desea eliminar este cliente?",
+                    "Confirmación",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirm != JOptionPane.YES_OPTION)
+                return;
+
+            service.eliminarCliente(idClienteSeleccionado);
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Cliente eliminado correctamente"
+            );
+
+            limpiarCampos();
+            cargarDatos();
+
         });
 
+        // boton limpiar
+        btnLimpiar = crearBoton(
+                "Limpiar",
+                new Color(149,165,166)
+        );
+
+        btnLimpiar.addActionListener(e -> limpiarCampos());
+
+        // Botón volver
+        btnVolver = crearBoton(
+                "Volver",
+                new Color(52,73,94)
+        );
+        btnVolver.addActionListener(e -> {
+
+            dispose();
+
+            new MainFrame().setVisible(true);
+
+        });
+
+        panelIzquierdo.add(btnAgregar);
+        panelIzquierdo.add(Box.createVerticalStrut(10));
+
+        panelIzquierdo.add(btnEditar);
+        panelIzquierdo.add(Box.createVerticalStrut(10));
+
+        panelIzquierdo.add(btnEliminar);
+        panelIzquierdo.add(Box.createVerticalStrut(10));
+
+        panelIzquierdo.add(btnLimpiar);
+        panelIzquierdo.add(Box.createVerticalStrut(10));
+
+        panelIzquierdo.add(btnVolver);
+
+        // ==========================
+        // PANEL DERECHO
+        // ==========================
+
+        JPanel panelDerecho = new JPanel(new BorderLayout(10,10));
+        panelDerecho.setBackground(Color.WHITE);
+        panelDerecho.setBorder(new EmptyBorder(20,20,20,20));
+
+        JLabel lblTabla = new JLabel("CLIENTES REGISTRADOS");
+        lblTabla.setFont(new Font("Segoe UI", Font.BOLD, 18));
+
+        panelDerecho.add(lblTabla, BorderLayout.NORTH);
+
+        modelo = new DefaultTableModel(
+                new String[]{
+                        "ID",
+                        "Cédula",
+                        "Nombres",
+                        "Apellidos",
+                        "Teléfono"
+                },
+                0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        tablaClientes = new JTable(modelo);
+
+        tablaClientes.setRowHeight(30);
+        tablaClientes.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        // Deshabilitar botones editar y eliminar cuando no se seleccione ningun registro
+        tablaClientes.getSelectionModel()
+                .addListSelectionListener(e -> {
+
+                    boolean seleccionado =
+                            tablaClientes.getSelectedRow() != -1;
+
+                    btnEditar.setEnabled(seleccionado);
+                    btnEliminar.setEnabled(seleccionado);
+                });
+
+        JScrollPane scroll = new JScrollPane(tablaClientes);
+
+        panelDerecho.add(scroll, BorderLayout.CENTER);
+
+        // Seleccionar fila
+        tablaClientes.getSelectionModel()
+                .addListSelectionListener(e -> {
+
+                    int fila = tablaClientes.getSelectedRow();
+
+                    if (fila != -1) {
+
+                        idClienteSeleccionado =
+                                Integer.parseInt(
+                                        modelo.getValueAt(fila,0).toString()
+                                );
+
+                        txtCedula.setText(
+                                modelo.getValueAt(fila,1).toString()
+                        );
+
+                        txtNombres.setText(
+                                modelo.getValueAt(fila,2).toString()
+                        );
+
+                        txtApellidos.setText(
+                                modelo.getValueAt(fila,3).toString()
+                        );
+
+                        txtTelefono.setText(
+                                modelo.getValueAt(fila,4).toString()
+                        );
+
+                        btnAgregar.setEnabled(false);
+
+                    }
+
+                });
+
+        // ==========================
+        // SPLIT PRINCIPAL
+        // ==========================
+
+        JSplitPane split = new JSplitPane(
+                JSplitPane.HORIZONTAL_SPLIT,
+                panelIzquierdo,
+                panelDerecho
+        );
+
+        split.setDividerLocation(320);
+        split.setBorder(null);
+
+        principal.add(header, BorderLayout.NORTH);
+        principal.add(split, BorderLayout.CENTER);
+
+        add(principal);
+
+        cargarDatos();
     }
 
+    private JButton crearBoton(String texto, Color color) {
 
+        JButton boton = new JButton(texto);
+
+        boton.setBackground(color);
+        boton.setForeground(Color.WHITE);
+
+        boton.setFocusPainted(false);
+
+        boton.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        boton.setMaximumSize(
+                new Dimension(
+                        Integer.MAX_VALUE,
+                        45
+                )
+        );
+
+        return boton;
+    }
 
     private void cargarDatos() {
+
         modelo.setRowCount(0);
 
-        for (Cliente c : service.obtenerClientes()) {
+        for (Cliente cliente : service.obtenerClientes()) {
+
             modelo.addRow(new Object[]{
-                    c.getId(),
-                    c.getNombre(),
-                    c.getCedula(),
-                    c.getTelefono()
+                    cliente.getIdCliente(),
+                    cliente.getCedula(),
+                    cliente.getNombres(),
+                    cliente.getApellidos(),
+                    cliente.getTelefono()
             });
+
         }
+
     }
 
     private void limpiarCampos() {
-        txtNombre.setText("");
+
+        txtNombres.setText("");
+        txtApellidos.setText("");
         txtCedula.setText("");
         txtTelefono.setText("");
-        tabla.clearSelection();
+
+        idClienteSeleccionado = -1;
+
+        tablaClientes.clearSelection();
 
         btnAgregar.setEnabled(true);
+
     }
 
     private boolean validarCampos() {
-        String nombre = txtNombre.getText().trim();
+
+        String nombres = txtNombres.getText().trim();
+        String apellidos = txtApellidos.getText().trim();
         String cedula = txtCedula.getText().trim();
         String telefono = txtTelefono.getText().trim();
 
-        // Campos vacíos
-        if (nombre.isEmpty() || cedula.isEmpty() || telefono.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Todos los campos son obligatorios");
+        if (
+                nombres.isEmpty() ||
+                        apellidos.isEmpty() ||
+                        cedula.isEmpty() ||
+                        telefono.isEmpty()
+        ) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Todos los campos son obligatorios"
+            );
+
             return false;
         }
 
-        // Cédula: solo números y 10 dígitos
         if (!cedula.matches("\\d{10}")) {
-            JOptionPane.showMessageDialog(null, "La cédula debe tener 10 dígitos numéricos");
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "La cédula debe tener 10 dígitos"
+            );
+
             return false;
         }
 
-        // Teléfono: 10 dígitos (Ecuador)
         if (!telefono.matches("\\d{10}")) {
-            JOptionPane.showMessageDialog(null, "El teléfono debe tener 10 dígitos");
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "El teléfono debe tener 10 dígitos"
+            );
+
             return false;
         }
 
         return true;
     }
+
+
 }

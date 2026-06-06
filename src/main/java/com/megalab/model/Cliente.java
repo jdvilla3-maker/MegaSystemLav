@@ -1,24 +1,65 @@
 package com.megalab.model;
 
 public class Cliente {
-    private String id;
-    private String nombre;
+
+    private int idCliente;
     private String cedula;
+    private String nombres;
+    private String apellidos;
     private String telefono;
 
-    public Cliente(String id, String nombre, String cedula, String telefono) {
-        this.id = id;
-        this.nombre = nombre;
+    public Cliente(
+            int idCliente,
+            String cedula,
+            String nombres,
+            String apellidos,
+            String telefono) {
+
+        this.idCliente = idCliente;
         this.cedula = cedula;
+        this.nombres = nombres;
+        this.apellidos = apellidos;
         this.telefono = telefono;
     }
 
-    public String getId() { return id; }
-    public String getNombre() { return nombre; }
-    public String getCedula() { return cedula; }
-    public String getTelefono() { return telefono; }
+    public int getIdCliente() {
+        return idCliente;
+    }
 
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    public void setCedula(String cedula) { this.cedula = cedula; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public String getCedula() {
+        return cedula;
+    }
+
+    public String getNombres() {
+        return nombres;
+    }
+
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setCedula(String cedula) {
+        this.cedula = cedula;
+    }
+
+    public void setNombres(String nombres) {
+        this.nombres = nombres;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    @Override
+    public String toString() {
+        return nombres + " " + apellidos;
+    }
 }
