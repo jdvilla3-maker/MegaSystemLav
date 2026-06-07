@@ -9,6 +9,10 @@ import java.util.List;
 
 public class PedidoDAO {
 
+    // ==========================
+    // INSERTAR
+    // ==========================
+
     public int insertarPedido(Pedido pedido) {
 
         String sql = """
@@ -53,14 +57,22 @@ public class PedidoDAO {
         return -1;
     }
 
+    // ==========================
+    // LISTAR TODOS
+    // ==========================
+
     public List<Pedido> obtenerPedidos() {
 
         List<Pedido> lista = new ArrayList<>();
 
         String sql = """
-                SELECT *
-                FROM Pedido
-                ORDER BY idPedido DESC
+                SELECT
+                    p.*,
+                    CONCAT(c.nombres, ' ', c.apellidos) AS nombreCliente
+                FROM Pedido p
+                INNER JOIN Cliente c
+                    ON p.idCliente = c.idCliente
+                ORDER BY p.idPedido DESC
                 """;
 
         try (
@@ -71,17 +83,18 @@ public class PedidoDAO {
 
             while (rs.next()) {
 
-                lista.add(
-                        new Pedido(
-                                rs.getInt("idPedido"),
-                                rs.getInt("idCliente"),
-                                rs.getDate("fechaRegistro"),
-                                rs.getDate("fechaEntrega"),
-                                rs.getString("estado"),
-                                rs.getString("observaciones")
-                        )
+                Pedido p = new Pedido(
+                        rs.getInt("idPedido"),
+                        rs.getInt("idCliente"),
+                        rs.getDate("fechaRegistro"),
+                        rs.getDate("fechaEntrega"),
+                        rs.getString("estado"),
+                        rs.getString("observaciones")
                 );
 
+                p.setNombreCliente(rs.getString("nombreCliente"));
+
+                lista.add(p);
             }
 
         } catch (SQLException e) {
@@ -91,10 +104,59 @@ public class PedidoDAO {
         return lista;
     }
 
-    public void actualizarEstado(
-            int idPedido,
-            String estado
-    ) {
+    // ==========================
+    // BUSCAR POR ID
+    // ==========================
+
+    public Pedido buscarPorId(int idPedido) {
+
+        String sql = """
+                SELECT
+                    p.*,
+                    CONCAT(c.nombres, ' ', c.apellidos) AS nombreCliente
+                FROM Pedido p
+                INNER JOIN Cliente c
+                    ON p.idCliente = c.idCliente
+                WHERE p.idPedido = ?
+                """;
+
+        try (
+                Connection conn = ConexionMySQL.conectar();
+                PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+
+            ps.setInt(1, idPedido);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+
+                Pedido p = new Pedido(
+                        rs.getInt("idPedido"),
+                        rs.getInt("idCliente"),
+                        rs.getDate("fechaRegistro"),
+                        rs.getDate("fechaEntrega"),
+                        rs.getString("estado"),
+                        rs.getString("observaciones")
+                );
+
+                p.setNombreCliente(rs.getString("nombreCliente"));
+
+                return p;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    // ==========================
+    // ACTUALIZAR ESTADO
+    // ==========================
+
+    public boolean actualizarEstado(int idPedido, String estado) {
 
         String sql = """
                 UPDATE Pedido
@@ -110,10 +172,36 @@ public class PedidoDAO {
             ps.setString(1, estado);
             ps.setInt(2, idPedido);
 
-            ps.executeUpdate();
+            return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
+        }
+    }
+
+    // ==========================
+    // ELIMINAR
+    // ==========================
+
+    public boolean eliminarPedido(int idPedido) {
+
+        String sql = """
+                DELETE FROM Pedido
+                WHERE idPedido = ?
+                """;
+
+        try (
+                Connection conn = ConexionMySQL.conectar();
+                PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+
+            ps.setInt(1, idPedido);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

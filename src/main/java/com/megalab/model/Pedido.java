@@ -6,12 +6,13 @@ public class Pedido {
 
     private int idPedido;
     private int idCliente;
-
     private Date fechaRegistro;
     private Date fechaEntrega;
-
     private String estado;
     private String observaciones;
+
+    // Campo de presentación (join con Cliente)
+    private String nombreCliente;
 
     public Pedido(
             int idPedido,
@@ -29,29 +30,13 @@ public class Pedido {
         this.observaciones = observaciones;
     }
 
-    public int getIdPedido() {
-        return idPedido;
-    }
-
-    public int getIdCliente() {
-        return idCliente;
-    }
-
-    public Date getFechaRegistro() {
-        return fechaRegistro;
-    }
-
-    public Date getFechaEntrega() {
-        return fechaEntrega;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public String getObservaciones() {
-        return observaciones;
-    }
+    public int getIdPedido() { return idPedido; }
+    public int getIdCliente() { return idCliente; }
+    public Date getFechaRegistro() { return fechaRegistro; }
+    public Date getFechaEntrega() { return fechaEntrega; }
+    public String getEstado() { return estado; }
+    public String getObservaciones() { return observaciones; }
+    public String getNombreCliente() { return nombreCliente; }
 
     public void setFechaEntrega(Date fechaEntrega) {
         this.fechaEntrega = fechaEntrega;
@@ -63,5 +48,9 @@ public class Pedido {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public void setNombreCliente(String nombreCliente) {
+        this.nombreCliente = nombreCliente;
     }
 }

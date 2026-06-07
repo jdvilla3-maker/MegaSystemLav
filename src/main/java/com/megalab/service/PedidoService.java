@@ -19,29 +19,25 @@ public class PedidoService {
     private ServicioDAO servicioDAO;
 
     public PedidoService() {
-
         pedidoDAO = new PedidoDAO();
         detalleDAO = new DetallePedidoDAO();
         servicioDAO = new ServicioDAO();
-
     }
 
     // =========================
-    // SERVICIOS
+    // SERVICIOS Y TIPOS
     // =========================
 
     public List<Servicio> obtenerServicios() {
         return servicioDAO.obtenerServicios();
     }
 
-    public List<TipoDetalle> obtenerTiposPorServicio(
-            int idServicio
-    ) {
+    public List<TipoDetalle> obtenerTiposPorServicio(int idServicio) {
         return servicioDAO.obtenerTiposPorServicio(idServicio);
     }
 
     // =========================
-    // PEDIDOS
+    // GUARDAR PEDIDO
     // =========================
 
     public boolean guardarPedido(
@@ -61,11 +57,10 @@ public class PedidoService {
                 Date.valueOf(LocalDate.now()),
                 fechaEntrega,
                 "Pendiente",
-                observaciones
+                observaciones.isBlank() ? null : observaciones
         );
 
-        int idPedido =
-                pedidoDAO.insertarPedido(pedido);
+        int idPedido = pedidoDAO.insertarPedido(pedido);
 
         if (idPedido == -1) {
             return false;
@@ -73,19 +68,15 @@ public class PedidoService {
 
         for (DetallePedido detalle : detalles) {
 
-            DetallePedido detalleGuardar =
-                    new DetallePedido(
-                            0,
-                            idPedido,
-                            detalle.getIdServicio(),
-                            detalle.getIdTipo(),
-                            detalle.getCantidad()
-                    );
-
-            detalleDAO.insertarDetalle(
-                    detalleGuardar
+            DetallePedido detalleGuardar = new DetallePedido(
+                    0,
+                    idPedido,
+                    detalle.getIdServicio(),
+                    detalle.getIdTipo(),
+                    detalle.getCantidad()
             );
 
+            detalleDAO.insertarDetalle(detalleGuardar);
         }
 
         return true;
@@ -99,20 +90,28 @@ public class PedidoService {
         return pedidoDAO.obtenerPedidos();
     }
 
-    // =========================
-    // ESTADOS
-    // =========================
-
-    public void actualizarEstado(
-            int idPedido,
-            String estado
-    ) {
-
-        pedidoDAO.actualizarEstado(
-                idPedido,
-                estado
-        );
-
+    public Pedido buscarPorId(int idPedido) {
+        return pedidoDAO.buscarPorId(idPedido);
     }
 
+    public List<DetallePedido> obtenerDetallesPorPedido(int idPedido) {
+        return detalleDAO.obtenerPorPedido(idPedido);
+    }
+
+    // =========================
+    // ACTUALIZAR ESTADO
+    // =========================
+
+    public boolean actualizarEstado(int idPedido, String estado) {
+        return pedidoDAO.actualizarEstado(idPedido, estado);
+    }
+
+    // =========================
+    // ELIMINAR PEDIDO
+    // =========================
+
+    public boolean eliminarPedido(int idPedido) {
+        // Los detalles se eliminan en cascada por FK
+        return pedidoDAO.eliminarPedido(idPedido);
+    }
 }
