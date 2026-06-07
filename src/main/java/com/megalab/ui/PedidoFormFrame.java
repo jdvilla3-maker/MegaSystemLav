@@ -5,7 +5,6 @@ import com.megalab.model.Servicio;
 import com.megalab.model.TipoDetalle;
 
 import com.megalab.dao.ServicioDAO;
-import com.megalab.dao.TipoDetalleDAO;
 import com.megalab.model.DetallePedido;
 import com.megalab.service.ClienteService;
 
@@ -41,7 +40,6 @@ public class PedidoFormFrame extends JFrame {
     private ClienteService clienteService = new ClienteService();
 
     private ServicioDAO servicioDAO = new ServicioDAO();
-    private TipoDetalleDAO tipoDetalleDAO = new TipoDetalleDAO();
 
     private List<DetallePedido> detallesTemp;
 
